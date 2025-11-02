@@ -41,19 +41,29 @@ if ($vc2013) {
 Write-Output "Visual C++ 2013 Redistributables registries not found."
 
 # --- Install via Chocolatey if available ---
-$choco = Get-Command choco -ErrorAction SilentlyContinue
-if ($choco) {
-    Write-Output "Chocolatey detected. Installing Visual C++ 2013 Redistributables (vcredist2013)."
-    choco install vcredist2013 -y --no-progress
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Failed to install Visual C++ 2013 Redistributables via Chocolatey."
-        exit 1
+$downloads = @{
+    "x86" = "https://download.microsoft.com/download/9/3/F/93FCF1E7-E6A4-478B-96E7-D4B285925B00/vcredist_x86.exe"
+    "x64" = "https://download.microsoft.com/download/9/3/F/93FCF1E7-E6A4-478B-96E7-D4B285925B00/vcredist_x64.exe"
+}
+
+foreach ($arch in $downloads.Keys) {
+    $url = $downloads[$arch]
+    $file = Join-Path $temp "vcredist2013_$arch.exe"
+
+    Write-Output "Downloading Visual C++ 2013 Redistributable ($arch)..."
+    Invoke-WebRequest -Uri $url -OutFile $file -UseBasicParsing
+
+    Write-Output "Installing Visual C++ 2013 Redistributable ($arch)..."
+    Start-Process $file -ArgumentList "/install", "/quiet", "/norestart" -Wait
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Output "Successfully installed VC++ 2013 Redistributable ($arch)."
     } else {
-        Write-Output "Successfully installed Visual C++ 2013 Redistributables."
+        Write-Error "Failed to install VC++ 2013 Redistributable ($arch). Exit code: $LASTEXITCODE"
+        exit 1
     }
 }
-else {
-    Write-Warning "Chocolatey not available. Please install Microsoft Visual C++ 2013 Redistributables manually."
-    exit 1
-}
+
+Write-Output ""
+Write-Output "Microsoft Visual C++ 2013 Redistributables installation complete."
 
