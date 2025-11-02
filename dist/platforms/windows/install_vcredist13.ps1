@@ -25,7 +25,7 @@ if ($dllsFound.Count -ge 2) {
     return
 }
 
-Write-Output "DLLs not found; checking registry entries..."
+Write-Output "Visual C++ 2013 Redistributables DLLs not found."
 
 # --- Check registry uninstall entries ---
 $vc2013 = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall" `
@@ -38,12 +38,12 @@ if ($vc2013) {
     return
 }
 
-Write-Warning "Visual C++ 2013 Redistributables not detected."
+Write-Output "Visual C++ 2013 Redistributables registries not found."
 
 # --- Install via Chocolatey if available ---
 $choco = Get-Command choco -ErrorAction SilentlyContinue
 if ($choco) {
-    Write-Output "Chocolatey detected. Installing vcredist2013..."
+    Write-Output "Chocolatey detected. Installing Visual C++ 2013 Redistributables (vcredist2013)."
     choco install vcredist2013 -y --no-progress
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to install Visual C++ 2013 Redistributables via Chocolatey."
