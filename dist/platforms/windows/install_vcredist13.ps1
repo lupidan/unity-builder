@@ -39,4 +39,7 @@ Write-Output "#########################################################"
 Write-Output ""
 
 
-choco install vcredist2013 -y --no-progress
+winget list vcredist
+winget install --id Microsoft.VCRedist.2013.x64 -e --accept-package-agreements --accept-source-agreements
+winget install --id Microsoft.VCRedist.2013.x86 -e --accept-package-agreements --accept-source-agreements
+winget list vcredist
