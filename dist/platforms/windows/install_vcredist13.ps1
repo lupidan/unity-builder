@@ -4,42 +4,56 @@
 
 Write-Output ""
 Write-Output "#########################################################"
-Write-Output "#                  Checking setup  (1)                  #"
+Write-Output "#         Visual C++ Redistributables (2013)            #"
 Write-Output "#########################################################"
 Write-Output ""
 
-Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* ,
-                 HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* |
-    Where-Object { $_.DisplayName -like "*Visual C++*" } |
-    Select-Object DisplayName, DisplayVersion, Publisher, InstallDate |
-    Sort-Object DisplayName
+Write-Output "Checking for Microsoft Visual C++ 2013 Redistributables..."
 
-Write-Output ""
-Write-Output "#########################################################"
-Write-Output "#                  Checking setup (2)                   #"
-Write-Output "#########################################################"
-Write-Output ""
+# --- Check for DLLs directly ---
+$dllPaths = @(
+    "C:\Windows\System32\msvcr120.dll",
+    "C:\Windows\System32\msvcp120.dll",
+    "C:\Windows\SysWOW64\msvcr120.dll",
+    "C:\Windows\SysWOW64\msvcp120.dll"
+)
 
-Get-CimInstance Win32_Product | Where-Object { $_.Name -like "*Visual C++*" } |
-    Select-Object Name, Version
+$dllsFound = $dllPaths | Where-Object { Test-Path $_ }
+if ($dllsFound.Count -ge 2) {
+    Write-Output "Found Visual C++ 2013 runtime DLLs:"
+    $dllsFound | ForEach-Object { Write-Output "  - $_" }
+    return
+}
 
-Write-Output ""
-Write-Output "#########################################################"
-Write-Output "#                  Checking setup (3)                   #"
-Write-Output "#########################################################"
-Write-Output ""
+Write-Output "DLLs not found; checking registry entries..."
 
-Get-ChildItem "C:\Windows\System32" -Filter "msvcp*.dll" | Select Name, VersionInfo
+# --- Check registry uninstall entries ---
+$vc2013 = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall" `
+          | Get-ItemProperty `
+          | Where-Object { $_.DisplayName -like "Microsoft Visual C++ 2013*" }
 
+if ($vc2013) {
+    Write-Output "Found Visual C++ 2013 Redistributables via registry:"
+    $vc2013 | ForEach-Object { Write-Output "  - $($_.DisplayName) ($($_.DisplayVersion))" }
+    return
+}
 
-Write-Output ""
-Write-Output "#########################################################"
-Write-Output "#     Installing Visual C++ Redistributables (2013)     #"
-Write-Output "#########################################################"
-Write-Output ""
+Write-Warning "Visual C++ 2013 Redistributables not detected."
 
+# --- Install via Chocolatey if available ---
+$choco = Get-Command choco -ErrorAction SilentlyContinue
+if ($choco) {
+    Write-Output "Chocolatey detected. Installing vcredist2013..."
+    choco install vcredist2013 -y --no-progress
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to install Visual C++ 2013 Redistributables via Chocolatey."
+        exit 1
+    } else {
+        Write-Output "Successfully installed Visual C++ 2013 Redistributables."
+    }
+}
+else {
+    Write-Warning "Chocolatey not available. Please install Microsoft Visual C++ 2013 Redistributables manually."
+    exit 1
+}
 
-winget list vcredist
-winget install --id Microsoft.VCRedist.2013.x64 -e --accept-package-agreements --accept-source-agreements
-winget install --id Microsoft.VCRedist.2013.x86 -e --accept-package-agreements --accept-source-agreements
-winget list vcredist
