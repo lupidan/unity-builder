@@ -84,6 +84,14 @@ elseif( ($null -ne ${env:UNITY_LICENSING_SERVER}))
                                        -Wait `
                                        -RedirectStandardOutput "license.txt"
 
+    Write-Output "----- license.txt contents -----"
+    if (Test-Path "license.txt") {
+        Get-Content "license.txt" | ForEach-Object { Write-Output $_ }
+    } else {
+        Write-Output "license.txt not found"
+    }
+    Write-Output "--------------------------------"
+
     $PARSEDFILE = (Get-Content "license.txt" | Select-String -AllMatches -Pattern '\".*?\"' | ForEach-Object { $_.Matches.Value }) -replace '"'
 
     $env:FLOATING_LICENSE = $PARSEDFILE[1]

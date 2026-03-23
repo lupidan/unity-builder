@@ -72,6 +72,14 @@ elif [[ -n "$UNITY_LICENSING_SERVER" ]]; then
   # Store the exit code from the verify command
   UNITY_EXIT_CODE=$?
 
+  echo "----- license.txt contents -----"
+  if [ -f "license.txt" ]; then
+    cat license.txt
+  else
+    echo "license.txt not found"
+  fi
+  echo "--------------------------------"
+
   if [ $UNITY_EXIT_CODE -eq 0 ]; then
     PARSEDFILE=$(grep -oP '\".*?\"' < license.txt | tr -d '"')
     export FLOATING_LICENSE
