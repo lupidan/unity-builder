@@ -65,6 +65,23 @@ elif [[ -n "$UNITY_LICENSING_SERVER" ]]; then
   #
   # Custom Unity License Server
   #
+
+  echo "Checking licensing server availability..."
+
+  STATUS_URL="${UNITY_LICENSING_SERVER}/status"
+
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$STATUS_URL")
+
+  if [[ "$HTTP_CODE" == "200" ]]; then
+    echo "Licensing server is reachable (HTTP 200)"
+  else
+    echo "Failed to reach licensing server at $STATUS_URL (HTTP $HTTP_CODE)"
+    exit 1
+  fi
+
+  #
+  # Custom Unity License Server
+  #
   echo "Adding licensing server config"
 
   /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client --acquire-floating > license.txt #is this accessible in a env variable?
