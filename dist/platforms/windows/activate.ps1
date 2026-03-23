@@ -56,6 +56,25 @@ elseif( ($null -ne ${env:UNITY_LICENSING_SERVER}))
     # Custom Unity License Server
     #
 
+    Write-Output "Checking licensing server availability..."
+
+    try {
+        $statusUrl = "$($env:UNITY_LICENSING_SERVER)/status"
+        $response = Invoke-WebRequest -Uri $statusUrl -UseBasicParsing -TimeoutSec 10
+
+        if ($response.StatusCode -eq 200) {
+            Write-Output "Licensing server is reachable (HTTP 200)"
+        } else {
+            Write-Output "Licensing server returned unexpected status: $($response.StatusCode)"
+            exit 1
+        }
+    }
+    catch {
+        Write-Output "Failed to reach licensing server at $statusUrl"
+        Write-Output "Error: $($_.Exception.Message)"
+        exit 1
+    }
+
     Write-Output "Adding licensing server config"
 
     $ACTIVATION_OUTPUT = Start-Process -FilePath "$Env:UNITY_PATH\Editor\Data\Resources\Licensing\Client\Unity.Licensing.Client.exe" `
