@@ -70,12 +70,31 @@ elif [[ -n "$UNITY_LICENSING_SERVER" ]]; then
 
   STATUS_URL="${UNITY_LICENSING_SERVER}/status"
 
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$STATUS_URL")
+  retry_count=0
+  max_retries=50
+  delay=5
 
-  if [[ "$HTTP_CODE" == "200" ]]; then
-    echo "Licensing server is reachable (HTTP 200)"
-  else
-    echo "Failed to reach licensing server at $STATUS_URL (HTTP $HTTP_CODE)"
+  while [[ $retry_count -lt $max_retries ]]
+  do
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$STATUS_URL")
+
+    if [[ "$HTTP_CODE" == "200" ]]; then
+      echo "Licensing server is reachable (HTTP 200)"
+      break
+    else
+      ((retry_count++))
+      echo "::warning ::Licensing server not ready (HTTP $HTTP_CODE), retry #$retry_count"
+      
+      if [[ $retry_count -lt $max_retries ]]; then
+        echo "Retrying in $delay seconds..."
+        sleep $delay
+        delay=$((delay * 2))
+      fi
+    fi
+  done
+
+  if [[ "$HTTP_CODE" != "200" ]]; then
+    echo "Failed to reach licensing server at $STATUS_URL after $max_retries attempts"
     exit 1
   fi
 

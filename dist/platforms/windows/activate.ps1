@@ -58,20 +58,41 @@ elseif( ($null -ne ${env:UNITY_LICENSING_SERVER}))
 
     Write-Output "Checking licensing server availability..."
 
-    try {
-        $statusUrl = "$($env:UNITY_LICENSING_SERVER)/status"
-        $response = Invoke-WebRequest -Uri $statusUrl -UseBasicParsing -TimeoutSec 10
+    $statusUrl = "$($env:UNITY_LICENSING_SERVER)/status"
 
-        if ($response.StatusCode -eq 200) {
-            Write-Output "Licensing server is reachable (HTTP 200)"
-        } else {
-            Write-Output "Licensing server returned unexpected status: $($response.StatusCode)"
-            exit 1
+    $maxRetries = 50
+    $retryCount = 0
+    $delay = 5
+    $success = $false
+
+    while ($retryCount -lt $maxRetries) {
+        try {
+            $response = Invoke-WebRequest -Uri $statusUrl -UseBasicParsing -TimeoutSec 10
+
+            if ($response.StatusCode -eq 200) {
+                Write-Output "Licensing server is reachable (HTTP 200)"
+                $success = $true
+                break
+            } else {
+                Write-Output "Licensing server returned unexpected status: $($response.StatusCode)"
+            }
+        }
+        catch {
+            Write-Output "Attempt #$($retryCount + 1) failed to reach $statusUrl"
+            Write-Output "Error: $($_.Exception.Message)"
+        }
+
+        $retryCount++
+
+        if ($retryCount -lt $maxRetries) {
+            Write-Output "Retrying in $delay seconds..."
+            Start-Sleep -Seconds $delay
+            $delay = $delay * 2
         }
     }
-    catch {
-        Write-Output "Failed to reach licensing server at $statusUrl"
-        Write-Output "Error: $($_.Exception.Message)"
+
+    if (-not $success) {
+        Write-Output "Failed to reach licensing server after $maxRetries attempts"
         exit 1
     }
 
