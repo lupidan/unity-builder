@@ -60,7 +60,7 @@ elseif( ($null -ne ${env:UNITY_LICENSING_SERVER}))
 
     $statusUrl = "$($env:UNITY_LICENSING_SERVER)/status"
 
-    $maxRetries = 50
+    $maxRetries = 10
     $retryCount = 0
     $delay = 5
     $success = $false

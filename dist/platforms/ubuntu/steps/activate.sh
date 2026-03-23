@@ -71,7 +71,7 @@ elif [[ -n "$UNITY_LICENSING_SERVER" ]]; then
   STATUS_URL="${UNITY_LICENSING_SERVER}/status"
 
   retry_count=0
-  max_retries=50
+  max_retries=10
   delay=5
 
   while [[ $retry_count -lt $max_retries ]]
