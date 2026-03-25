@@ -811,7 +811,6 @@ class Docker {
             --volume "${actionFolder}/platforms/windows":"c:/steps" \
             --volume "${actionFolder}/unity-config":"C:/ProgramData/Unity/config" \
             --volume "${actionFolder}/BlankProject":"c:/BlankProject" \
-            --network host \
             --cpus=${dockerCpuLimit} \
             --memory=${dockerMemoryLimit} \
             --isolation=${dockerIsolationMode} \
